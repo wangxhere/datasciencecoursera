@@ -1,3 +1,6 @@
+# https://github.com/Xiaodan/Coursera-Getting-and-Cleaning-Data.git
+# was referenced to when completing this project.
+
 # read data
 x_train <- read.table("./train/x_train.txt")
 y_train <- read.table("./train/y_train.txt")
