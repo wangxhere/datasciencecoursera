@@ -1,5 +1,4 @@
-# https://github.com/Xiaodan/Coursera-Getting-and-Cleaning-Data.git
-# was referenced to when completing this project.
+require(dplyr)
 
 # read data
 x_train <- read.table("./train/x_train.txt")
@@ -20,6 +19,10 @@ subject_joined <- rbind(subject_train, subject_test)
 mean_std_index <- grep("(.*)mean[(][)](.*)|(.*)std[(][)](.*)", features[, 2])
 
 x_joined <- x_joined[, mean_std_index]
+
+# process features lables
+features[,2] <- gsub("-", "_minus_", features[,2]);
+features[,2] <- gsub("[(][)]", "", features[,2]);
 
 # process activity labels
 activity_labels[, 2] <- tolower(gsub("_", "", activity_labels[, 2]))
@@ -48,18 +51,10 @@ subtotal_data <- as.data.frame(subtotal_data)
 
 colnames(subtotal_data) <- colnames(merged_data)
 
-# sub-total merged dataset iteratively
-row <- 1
-for(i in 1:num_of_subjects) {
-  for(j in 1:num_of_activities) {
-    subtotal_data[row, 1] <- sort(unique(subject_joined)[, 1])[i]
-    subtotal_data[row, 2] <- activity_labels[j, 2]
-    subtotal_data[row, 3:num_of_cols] <-
-      colMeans(merged_data[(i == merged_data$subject) &
-      (activity_labels[j,2] == merged_data$activity_labels), 3:num_of_cols])
-    row <- row + 1
-  }
-}
+# sub-total merged dataset with dplyr
+df <- as_data_frame(merged_data)
+df_grouped <- group_by(df, subject, activity)
+df_sum <- summarise_each_(df_grouped, funs(mean), list(quote(-activity),quote(-subject)))
 
 # write to file
-write.table(subtotal_data, "dataset_subtotal.txt", row.names=FALSE)
+write.table(df_sum, "dataset_subtotal.txt", row.names=FALSE)
